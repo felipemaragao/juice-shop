@@ -28,8 +28,5 @@ jobs:
 
   scan-security:
     uses: ./.github/workflows/security-scan.yml
-    secrets:
-      username: ${{ secrets.EMAIL_USERNAME }}
-      password: ${{ secrets.EMAIL_PASSWORD }}
     with:
       environment: ${{ (github.ref == 'refs/heads/main' && 'prod') || (startsWith(github.ref, 'refs/heads/feature/') && 'dev') || 'dev' }}
