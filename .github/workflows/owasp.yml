@@ -1,0 +1,42 @@
+name: Owasp
+
+on: 
+  workflow_call:      
+
+jobs:
+  owasp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache OWASP Dependency-Check data
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/dependency-check
+          key: ${{ runner.os }}-dependency-check
+          restore-keys: ${{ runner.os }}-dependency-check -Ddependency-check.updateOnly=false
+
+      - name: Rodar OWASP Dependency-Check
+        run: mvn -f app/pom.xml dependency-check:check
+
+      - name: Exibir relatório OWASP Dependency-Check (HTML) no log
+        run: |
+          if [ -f app/target/dependency-check-report.html ]; then
+            echo "==================== OWASP Dependency-Check (HTML) ===================="
+            cat app/target/dependency-check-report.html
+            echo "======================================================================"
+          else
+            echo "Relatório HTML não encontrado."
+          fi
+
+      - name: Publicar relatório Dependency-Check
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: app/target/dependency-check-report.html

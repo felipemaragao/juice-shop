@@ -1,0 +1,35 @@
+# .github/workflows/deploy.yml
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+    tags:
+      - "v*" # ex: v1.0.0
+
+jobs:
+  # owasp:
+  #   uses: ./.github/workflows/owasp.yml
+
+  #  sonar-cloud:
+  #    uses: ./.github/workflows/sonar-cloud.yml
+  #    secrets:
+  #      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # secret-scan:
+  #   uses: ./.github/workflows/gitleaks.yml
+
+  code-scan:
+    uses: ./.github/workflows/semgrep.yml
+    secrets:
+      SEMGREP_PUBLISH_TOKEN: ${{ secrets.SEMGREP_PUBLISH_TOKEN }}
+
+  scan-security:
+    uses: ./.github/workflows/security-scan.yml
+    secrets:
+      username: ${{ secrets.EMAIL_USERNAME }}
+      password: ${{ secrets.EMAIL_PASSWORD }}
+    with:
+      environment: ${{ (github.ref == 'refs/heads/main' && 'prod') || (startsWith(github.ref, 'refs/heads/feature/') && 'dev') || 'dev' }}

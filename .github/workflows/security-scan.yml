@@ -1,0 +1,66 @@
+name: Security Scan
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+    secrets:
+        username:
+          required: true
+        password:
+          required: true
+
+jobs:
+  trivy_scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+   
+      # - name: Run Trivy scan
+      #  # if: ${{ inputs.environment == 'prod' }}
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     image-ref: "felipemaragao/sga-api:latest"
+      #     format: "sarif"
+      #     output: "trivy-results.sarif"
+      #     exit-code: 1
+      #     ignore-unfixed: true
+      #     severity: "CRITICAL,HIGH"    
+
+      - name: Run Trivy scan (table output)
+       # if: ${{ inputs.environment == 'prod' }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "felipemaragao/sga-api:latest"
+          format: "table"
+          exit-code: 0
+          ignore-unfixed: true
+          severity: "CRITICAL,HIGH"
+      
+      # - name: Upload Trivy SARIF report
+      #   if: ${{ inputs.environment == 'prod' }}
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: trivy-results
+      #     path: trivy-results.sarif
+          
+
+
+      - name: Send email on failure
+        if: failure() && steps.trivy_scan.outcome == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.username }}
+          password: ${{ secrets.password }}
+          subject: "🚨 Vulnerabilidade detectada no Security Scan"
+          to: felipe@qualify.com.br
+          from: ${{ secrets.username }}
+          body: |
+            O scan de segurança falhou no ambiente ${{ inputs.environment }}.
+            Verifique os detalhes no GitHub Actions.
+      
+      
